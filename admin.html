@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Owner Admin | Vaishnavi Banquet</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .admin-wrap{width:min(1200px,94%);margin:24px auto 60px}
+  .login{max-width:380px;margin:80px auto}
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+  .tabs button{padding:9px 16px;border-radius:999px;border:1px solid var(--gold);background:#fff;color:var(--maroon);cursor:pointer;font:inherit}
+  .tabs button.active{background:var(--maroon);color:#fff;border-color:var(--maroon)}
+  .panel{display:none}.panel.active{display:block}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:20px}
+  .stat{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px}
+  .stat b{display:block;font-family:var(--serif);font-size:2.2rem;color:var(--maroon-dark)}
+  .two{display:grid;grid-template-columns:1.1fr 1fr;gap:20px;align-items:start}
+  table{width:100%;border-collapse:collapse;background:#fff;font-size:.9rem}
+  th,td{padding:10px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  th{background:#f8f1df;color:var(--maroon-dark);font-size:.8rem;text-transform:uppercase;letter-spacing:.05em}
+  .table-wrap{overflow-x:auto;border-radius:12px;border:1px solid var(--line)}
+  select,input,textarea{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#fffdfa}
+  textarea{width:100%}
+  .pill{display:inline-block;padding:2px 10px;border-radius:999px;font-size:.78rem;font-weight:600}
+  .p-Pending{background:#FFF1C7;color:#7a5a00}.p-Confirmed{background:#E3F2E8;color:var(--ok)}.p-Cancelled{background:#F6DDE0;color:var(--bad)}
+  .cal-admin .day{cursor:pointer}
+  .day.booked{background:#F6DDE0;color:var(--bad);border-color:#EDC0C5}
+  .day.blocked{background:#E4E4E4;color:#555;border-color:#CFCFCF}
+  .day.sel{outline:2px solid var(--gold)}
+  .card h3{margin-top:0}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin-bottom:12px}
+  .row label{display:block;font-size:.82rem;font-weight:600;margin-bottom:4px}
+  .msg{margin:10px 0;font-weight:500}.msg.ok{color:var(--ok)}.msg.bad{color:var(--bad)}
+  .stack > * + *{margin-top:18px}
+  .small-btn{padding:8px 14px;font-size:.88rem}
+  details{margin-bottom:12px} summary{cursor:pointer;font-weight:600;color:var(--maroon-dark)}
+  pre.json{width:100%;min-height:160px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.82rem}
+  .hidden{display:none!important}
+  @media (max-width:900px){.two{grid-template-columns:1fr}}
+</style>
+</head>
+<body style="background:var(--cream)">
+<div class="admin-wrap">
+
+  <section id="login-view" class="card login">
+    <p class="eyebrow">Owner login</p>
+    <h2>Vaishnavi Banquet Admin</h2>
+    <form id="login-form">
+      <div class="field"><label for="pw">Admin password</label><input id="pw" type="password" autocomplete="current-password" required></div>
+      <button class="btn btn-gold" type="submit" style="width:100%">Log in</button>
+      <p class="msg bad" id="login-msg"></p>
+    </form>
+    <p class="small muted">Forgot the password? The website developer sets it with the ADMIN_PASSWORD setting on the server. See the README.</p>
+    <p class="small"><a href="index.html">Back to website</a></p>
+  </section>
+
+  <section id="app-view" class="hidden">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px">
+      <div><p class="eyebrow">Admin dashboard</p><h2 style="margin:0">Vaishnavi Banquet</h2></div>
+      <div style="display:flex;gap:10px"><a class="btn btn-outline small-btn" href="index.html" target="_blank">View website</a><button class="btn btn-outline small-btn" id="logout">Log out</button></div>
+    </div>
+
+    <div class="tabs" role="tablist">
+      <button data-tab="overview" class="active">Overview</button>
+      <button data-tab="calendar">Hall Availability</button>
+      <button data-tab="enquiries">Enquiries</button>
+      <button data-tab="content">Website Content</button>
+    </div>
+
+    <!-- OVERVIEW -->
+    <div class="panel active" id="tab-overview">
+      <div class="stats">
+        <div class="stat"><span class="muted">Total enquiries</span><b id="s-total">0</b></div>
+        <div class="stat"><span class="muted">Pending</span><b id="s-pending">0</b></div>
+        <div class="stat"><span class="muted">Confirmed</span><b id="s-confirmed">0</b></div>
+        <div class="stat"><span class="muted">Cancelled</span><b id="s-cancelled">0</b></div>
+      </div>
+      <div class="two">
+        <div class="card"><h3>Upcoming events</h3><div id="o-upcoming"></div></div>
+        <div class="card"><h3>Recent enquiries</h3><div id="o-recent"></div></div>
+      </div>
+    </div>
+
+    <!-- CALENDAR -->
+    <div class="panel" id="tab-calendar">
+      <div class="two">
+        <div class="card cal-admin">
+          <h3>Calendar</h3>
+          <p class="small muted">Click a day to select it. Colours: green = available (default), red = booked, grey = unavailable/blocked.</p>
+          <div id="admin-cal"></div>
+        </div>
+        <div class="card stack">
+          <h3>Update availability</h3>
+          <div class="row">
+            <div><label for="a-from">From</label><input type="date" id="a-from"></div>
+            <div><label for="a-to">To (same as From for one day)</label><input type="date" id="a-to"></div>
+          </div>
+          <div class="row">
+            <div><label for="a-status">Set these dates to</label>
+              <select id="a-status">
+                <option value="available">Available (open)</option>
+                <option value="booked">Booked</option>
+                <option value="blocked">Unavailable / blocked</option>
+              </select></div>
+          </div>
+          <div class="row"><div style="flex:1"><label for="a-note">Note (private, not shown to visitors)</label><input id="a-note" maxlength="200" style="width:100%" placeholder="For example: Family function, Maintenance"></div></div>
+          <button class="btn btn-gold small-btn" id="a-apply">Save availability</button>
+          <p class="msg" id="a-msg"></p>
+          <hr style="border:0;border-top:1px solid var(--line)">
+          <h3 style="margin-bottom:4px">Dates with notes or bookings</h3>
+          <div id="a-list" class="small"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ENQUIRIES -->
+    <div class="panel" id="tab-enquiries">
+      <div class="row" style="justify-content:space-between">
+        <div class="row"><div><label for="e-filter">Filter by status</label><select id="e-filter"><option value="">All</option><option>Pending</option><option>Confirmed</option><option>Cancelled</option></select></div>
+        <div><label for="e-search">Search name or phone</label><input id="e-search" placeholder="Search"></div></div>
+        <button class="btn btn-outline small-btn" id="export">Export to Excel (CSV)</button>
+      </div>
+      <p class="small muted">Confirming an enquiry marks its date as Booked in the calendar. Cancelling it frees the date again.</p>
+      <div class="table-wrap"><table><thead><tr><th>Received</th><th>Customer</th><th>Event</th><th>Date / Guests</th><th>Status</th><th>Notes</th><th>Contact</th></tr></thead><tbody id="e-body"></tbody></table></div>
+      <p class="msg" id="e-msg"></p>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="panel" id="tab-content">
+      <div class="two">
+        <div class="card stack">
+          <h3>Hall and contact</h3>
+          <div class="field"><label for="c-tagline">Tagline</label><input id="c-tagline" style="width:100%"></div>
+          <div class="field"><label for="c-areas">Hall areas (one per line)</label><textarea id="c-areas" rows="5"></textarea></div>
+          <div class="field"><label for="c-capacity">Hall capacity (leave empty until confirmed)</label><input id="c-capacity" style="width:100%"></div>
+          <div class="field"><label for="c-address">Address</label><input id="c-address" style="width:100%"></div>
+          <div class="field"><label for="c-phones">Phone numbers (comma separated, 10 digits)</label><input id="c-phones" style="width:100%"></div>
+          <div class="field"><label for="c-wa">WhatsApp number for enquiries (10 digits)</label><input id="c-wa" style="width:100%"></div>
+          <div class="field"><label for="c-hours">Business hours</label><input id="c-hours" style="width:100%"></div>
+          <button class="btn btn-gold small-btn" id="save-basic">Save hall and contact</button>
+          <p class="msg" id="basic-msg"></p>
+        </div>
+        <div class="card stack">
+          <h3>Lists (advanced)</h3>
+          <p class="small muted">These sections are edited as JSON. Copy an existing entry, change the text, and save. Keep the quotes and commas as they are.</p>
+          <details open><summary>Facilities</summary><pre class="json" id="j-facilities"></pre><button class="btn btn-outline small-btn" data-save="facilities">Save facilities</button></details>
+          <details><summary>Events</summary><pre class="json" id="j-events"></pre><button class="btn btn-outline small-btn" data-save="events">Save events</button></details>
+          <details><summary>Packages and prices</summary><pre class="json" id="j-packages"></pre><button class="btn btn-outline small-btn" data-save="packages">Save packages</button></details>
+          <details><summary>Restaurant menu</summary><pre class="json" id="j-menu"></pre><button class="btn btn-outline small-btn" data-save="menu">Save menu</button></details>
+          <details><summary>Reviews</summary><pre class="json" id="j-reviews"></pre><button class="btn btn-outline small-btn" data-save="reviews">Save reviews</button></details>
+          <details><summary>Gallery photos</summary><pre class="json" id="j-gallery"></pre><button class="btn btn-outline small-btn" data-save="gallery">Save gallery</button></details>
+          <p class="msg" id="json-msg"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+<script src="js/admin.js"></script>
+</body>
+</html>
